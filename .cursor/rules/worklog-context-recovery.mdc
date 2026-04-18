@@ -1,0 +1,23 @@
+---
+description: 上下文压缩或任务延续时先读共享黑板 worklog.md
+alwaysApply: true
+---
+
+# Worklog 上下文恢复（Agent 1 / 2 必读）
+
+本仓库唯一异步协作面为根目录 **`worklog.md`**（协议中亦写作 `WORKLOG.md`）。
+
+## 何时必须先 Read
+
+- 出现「上下文即将压缩 / 已压缩」或用户说明对话被摘要、接不上文时。
+- 用户新开对话、说「继续」「接上」「刚才做到哪」时。
+- 在 Planner（Agent 1）或 Executor（Agent 2）专用 Chat 中，**准备交付或承接任务前**，若 Task Board / Session Logs 状态不来自本对话近期记忆。
+
+## 动作
+
+1. 使用 **Read** 读取仓库根目录 **`worklog.md`**（若不存在再尝试 `WORKLOG.md`）。
+2. 再依据其中 **Project State**、**Task Board**、**Session Logs** 继续；角色边界仍遵 `.cursorrules`。
+
+## 说明
+
+Cursor 无法在压缩瞬间替 Agent 自动附加文件；**须由用户 @worklog.md 或你主动 Read**。`preCompact` 钩子仅向用户显示提醒。

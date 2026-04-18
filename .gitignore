@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# OS / editor
+.DS_Store
+
+# 可选：不在仓库中跟踪仿真输出（取消下一行注释则忽略整个 results/，仅保留追踪时请用 git add -f）
+# /results/*
+# !/results/.gitkeep

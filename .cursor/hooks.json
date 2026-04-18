@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "preCompact": [
+      {
+        "command": ".cursor/hooks/precompact-worklog-reminder.sh",
+        "timeout": 5
+      }
+    ]
+  }
+}

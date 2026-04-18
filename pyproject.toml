@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oblateness"
+version = "0.1.0"
+description = "Exoplanet ellipticity / oblateness — simulation tooling"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+viz = [
+    "matplotlib>=3.7",
+]
+squishy = [
+    "squishyplanet>=0.3",
+    "matplotlib>=3.7",
+    "exotic-ld>=3.2",
+    "jax>=0.4",
+    "jaxlib>=0.4",
+    # exotic_ld 仍依赖 pkg_resources（setuptools≥82 在部分环境不再提供）
+    "setuptools>=69,<81",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "integration: needs optional squishy/exotic_ld stack and data files",
+]
