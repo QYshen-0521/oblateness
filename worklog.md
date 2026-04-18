@@ -114,6 +114,8 @@
 
 **解释边界**：多系统间差异来自 **\(R_p/R_\star,\,a/R_\star,\,i,\,\mathrm{LD},\,T_\mathrm{eff}\)** 等；**小 \(f\)** 仍可能因信号弱系统性 **failed**（与单星结论一致），不应与 C1 实现混淆。
 
+**超算 `test.sh`（与 Startrack 作业模板对齐）**：`#SBATCH` 使用分区 `64c512g`、`--account=acct-tdlffb`、`--nodes=1`、`--ntasks-per-node=1`、`--cpus-per-task=4`、`--mem=16G`、`--output=logs/%j.out`；`set -euo pipefail`；`source activate astro_ml`；`WORKDIR` 指向服务器上本仓库路径。**结果路径**：脚本内 **`RESULTS_SUBDIR`**（默认 `multi_system` → 写入 `results/<subdir>/`）或 **`RESULTS_DIR`**（非空时为**绝对路径**，调用 `python -m oblateness.multi_system_batch_noiseless --output-dir`，等价环境变量 `OBLATE_MULTI_OUTPUT_DIR`）。详见 Session Log 2026-04-18（Executor）第二条。
+
 ## [Task Board]
 
 - [ ] Planner: 细化椭率探测的数学模型 (Pending)
@@ -144,3 +146,4 @@
 - 2026-04-18 (Chronicler): 配置 **Cursor `preCompact` 钩子**（`.cursor/hooks.json` → `.cursor/hooks/precompact-worklog-reminder.sh`）：压缩前向用户提示 `@worklog.md` / Agent Read 根目录黑板；**alwaysApply** 规则 `.cursor/rules/worklog-context-recovery.mdc` 约束 Agent 在压缩后或任务延续时先读 `worklog.md`。`.cursorrules` 已增「上下文压缩与黑板恢复」节。
 - 2026-04-18 (Planner): C1 去重并全量重跑后，单星批量在 **\(f_\mathrm{inj}>0.06\)** 上可**全部干净恢复**；**小 \(f\)** 仍可能因信号弱失败（物理/分辨率，非条纹假象）。**下一步**同意开展 **多系统**无噪声批量（不同 `row_index`/宿主）；分层小样与交付物见黑板「多系统批量无噪声测试」；委派 **Agent 2**。
 - 2026-04-18 (Executor): 多系统入口 `src/oblateness/multi_system_batch_noiseless.py`：对 `--rows`（或默认 `MULTI_SYSTEM_CONFIG['row_indices']`）逐行调用 `run_batch(planet_config_for_row(i))`；每系统 `results/multi_system/status_row*_*.png`、`batch_row*_*.npz`，汇总 `results/multi_system/multi_system_summary.csv`；失败行 stderr 打印并记入 CSV `error`。超算：仓库根 `test.sh`（`#SBATCH`、`WORKDIR=/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness`、顶部 `ROWS=...`），`sbatch test.sh`。
+- 2026-04-18 (Executor): `test.sh` 已与集群常用模板对齐（`partition=64c512g`、`account=acct-tdlffb`、`cpus-per-task=4`、`logs/%j.out`、`source activate astro_ml`）。**可改结果目录**：`RESULTS_SUBDIR`（相对 `results/`）或 `RESULTS_DIR`（绝对路径，透传 `--output-dir` / `OBLATE_MULTI_OUTPUT_DIR`）。代码：`multi_system_batch_noiseless.run_multi_system(..., output_dir=...)` 支持仓库外写入；CSV 中路径在仓库外时为绝对路径字符串。

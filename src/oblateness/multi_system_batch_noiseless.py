@@ -10,10 +10,12 @@
 
 或设置环境变量 ``OBLATE_ROW_INDICES=0,1,2``（命令行优先）。
 
-每系统输出至 ``results/<output_subdir>/``：状态图 ``status_row{idx:04d}_<name>.png``、
-``batch_row{idx:04d}_<name>.npz``；汇总表 ``multi_system_summary.csv``。
+每系统输出至 ``results/<output_subdir>/``（或 ``--output-dir``）：状态图 ``status_row{idx:04d}_<name>.png``、
+``batch_row{idx:04d}_<name>.npz``；汇总表 ``multi_system_summary.csv``；任务墙钟时间 ``run_timing.txt``。
 
-超算：在仓库根目录用 ``sbatch hpc_batch_noiseless.sh``（见该脚本内工作目录与行号）。
+超算：仓库根目录 ``test.sh``（``#SBATCH``、``WORKDIR``、``ROWS``、``RESULTS_DIR`` 等）。
+
+若设置 ``--output-dir`` 或环境变量 ``OBLATE_MULTI_OUTPUT_DIR``，则**直接**写入该目录（可与仓库 ``results/`` 分离，便于 NFS/大存储）。
 """
 
 from __future__ import annotations
@@ -23,7 +25,9 @@ import csv
 import os
 import re
 import sys
+import time
 import traceback
+from pathlib import Path
 from typing import Any
 
 from oblateness.batch_noiseless_recovery import (
@@ -51,24 +55,38 @@ def _safe_name_fragment(name: str) -> str:
     return s or "planet"
 
 
+def _path_for_summary(path: Path, root: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(root.resolve()))
+    except ValueError:
+        return str(path.resolve())
+
+
 def run_multi_system(
     row_indices: list[int],
     output_subdir: str | None = None,
+    output_dir: Path | str | None = None,
     write_summary: bool = True,
 ) -> list[dict[str, Any]]:
     """
     依次对 ``row_indices`` 中每个索引跑 ``run_batch``，写每系统图/npz；可选写汇总 CSV。
 
+    ``output_dir``：若给定，为**绝对输出根目录**（覆盖 ``output_subdir`` / 默认 ``results/<subdir>``）。
+
     返回每行一条记录的列表（含 ``ok``、路径或 ``error``）。
     """
-    sub = output_subdir or str(MULTI_SYSTEM_CONFIG["output_subdir"])
     root = _repo_root()
-    out_dir = root / "results" / sub
+    if output_dir is not None:
+        out_dir = Path(output_dir).expanduser().resolve()
+    else:
+        sub = output_subdir or str(MULTI_SYSTEM_CONFIG["output_subdir"])
+        out_dir = (root / "results" / sub).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     summary_name = str(MULTI_SYSTEM_CONFIG.get("summary_csv", "multi_system_summary.csv"))
     summary_rows: list[dict[str, Any]] = []
 
+    t0 = time.perf_counter()
     for ri in row_indices:
         rec: dict[str, Any] = {
             "row_index": ri,
@@ -101,10 +119,10 @@ def run_multi_system(
             npz_path = out_dir / npz_name
 
             _save_status_figure(results, fig_path)
-            rec["figure_path"] = str(fig_path.relative_to(root))
+            rec["figure_path"] = _path_for_summary(fig_path, root)
             if BATCH_RUN_CONFIG.get("save_results_npz", True):
                 _save_npz(results, npz_path)
-                rec["npz_path"] = str(npz_path.relative_to(root))
+                rec["npz_path"] = _path_for_summary(npz_path, root)
         except Exception as exc:  # noqa: BLE001 — 记录 skip，不静默
             rec["error"] = f"{type(exc).__name__}: {exc}"
             print(f"[SKIP] row_index={ri}: {rec['error']}", file=sys.stderr)
@@ -130,6 +148,18 @@ def run_multi_system(
                 w.writerow({k: row.get(k, "") for k in fieldnames})
         print("summary:", summary_path)
 
+    elapsed = time.perf_counter() - t0
+    timing_path = out_dir / "run_timing.txt"
+    timing_lines = [
+        f"wall_seconds={elapsed:.6f}",
+        f"n_row_indices={len(row_indices)}",
+    ]
+    jid = os.environ.get("SLURM_JOB_ID", "").strip()
+    if jid:
+        timing_lines.append(f"slurm_job_id={jid}")
+    timing_path.write_text("\n".join(timing_lines) + "\n", encoding="utf-8")
+    print(f"timing: wall_seconds={elapsed:.6f} -> {timing_path}")
+
     return summary_rows
 
 
@@ -154,15 +184,25 @@ def main() -> None:
         "--output-subdir",
         type=str,
         default=None,
-        help="Under results/, default from MULTI_SYSTEM_CONFIG.",
+        help="Under repo results/, default from MULTI_SYSTEM_CONFIG. Ignored if --output-dir is set.",
+    )
+    p.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Absolute directory for png/npz/summary (overrides --output-subdir). Env: OBLATE_MULTI_OUTPUT_DIR.",
     )
     args = p.parse_args()
     rows = _parse_row_indices_from_env_and_args(args)
     if not rows:
         print("No row indices; set --rows or OBLATE_ROW_INDICES or MULTI_SYSTEM_CONFIG.")
         return
+    od_env = os.environ.get("OBLATE_MULTI_OUTPUT_DIR", "").strip()
+    output_dir = args.output_dir or od_env or None
     print("row_indices:", rows)
-    run_multi_system(rows, output_subdir=args.output_subdir)
+    if output_dir:
+        print("output_dir:", Path(output_dir).expanduser().resolve())
+    run_multi_system(rows, output_subdir=args.output_subdir, output_dir=output_dir)
 
 
 if __name__ == "__main__":
