@@ -19,7 +19,7 @@
 set -euo pipefail
 
 # --- Conda 环境（与你在 Startrack 任务中一致；若用 module load / 其他 env 请改此处）---
-source activate astro_ml
+source activate oblateness
 
 # --- 本仓库在服务器上的绝对路径 ---
 WORKDIR="/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness"

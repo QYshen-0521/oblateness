@@ -1,0 +1,3 @@
+wall_seconds=13472.867499
+n_row_indices=5
+slurm_job_id=57501028

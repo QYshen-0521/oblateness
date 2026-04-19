@@ -1,0 +1,15 @@
+=== oblateness-multi START ===
+timestamp_local: 2026-04-18 14:27:42 +0800
+hostname: node022.pi.sjtu.edu.cn
+SLURM_JOB_ID=57501028
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/miniconda3/envs/oblateness/lib/python3.11/site-packages/exotic_ld/ld_grids.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+row_indices: [0, 1, 2, 3, 4]
+summary: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/multi_system_summary.csv
+timing: wall_seconds=13472.867499 -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/run_timing.txt
+=== oblateness-multi END ===
+timestamp_local: 2026-04-18 18:12:23 +0800
+elapsed_wall_seconds=13481
+python_exit_code=0
+Done. Results under: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system
+timing_line_appended_to: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/logs/batch_timing.log

@@ -1,0 +1,11 @@
+=== oblateness-multi START ===
+timestamp_local: 2026-04-18 14:04:56 +0800
+hostname: node036.pi.sjtu.edu.cn
+SLURM_JOB_ID=57500714
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/miniconda3/envs/astro_ml/bin/python: Error while finding module specification for 'oblateness.multi_system_batch_noiseless' (ModuleNotFoundError: No module named 'oblateness')
+=== oblateness-multi END ===
+timestamp_local: 2026-04-18 14:04:57 +0800
+elapsed_wall_seconds=1
+python_exit_code=1
+Done. Results under: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system
+timing_line_appended_to: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/logs/batch_timing.log

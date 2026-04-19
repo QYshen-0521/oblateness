@@ -1,0 +1,6 @@
+row_index,pl_name,n_clean,n_degenerate,n_failed,figure_path,npz_path,error
+0,TOI-2384 b,93,40,2,results/multi_system/status_row0000_TOI-2384_b.png,results/multi_system/batch_row0000_TOI-2384_b.npz,
+1,HAT-P-28 b,46,86,3,results/multi_system/status_row0001_HAT-P-28_b.png,results/multi_system/batch_row0001_HAT-P-28_b.npz,
+2,TOI-4773 b,30,103,2,results/multi_system/status_row0002_TOI-4773_b.png,results/multi_system/batch_row0002_TOI-4773_b.npz,
+3,Kepler-33 c,0,133,2,results/multi_system/status_row0003_Kepler-33_c.png,results/multi_system/batch_row0003_Kepler-33_c.npz,
+4,CoRoT-23 b,0,134,1,results/multi_system/status_row0004_CoRoT-23_b.png,results/multi_system/batch_row0004_CoRoT-23_b.npz,
