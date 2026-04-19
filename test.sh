@@ -25,6 +25,9 @@ source activate oblateness
 WORKDIR="/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness"
 cd "$WORKDIR" || { echo "cd failed: $WORKDIR" >&2; exit 1; }
 
+# src 布局：在未 pip install -e 时也能 import oblateness（仍须安装 squishy/JAX 等，见 pyproject.toml [squishy]）
+export PYTHONPATH="${WORKDIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
+
 # --- 结果保存路径（二选一，见下）---
 # 方式 A（默认）：写入仓库内 results/<子目录>，适合与代码同盘、小体量。
 RESULTS_SUBDIR="multi_system"
