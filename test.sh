@@ -63,8 +63,8 @@ RESULTS_DIR=""
 ROWS="0,1,2,3,4"
 # 方式 2：闭区间 [ROW_START, ROW_END]（含端点）。若 ROW_END 非空，则忽略上面的 ROWS，自动展开为
 #   ROW_START, ROW_START+1, ..., ROW_END。例：ROW_START=0 ROW_END=100 -> 共 101 行（0..100）
-ROW_START=5
-ROW_END=20
+ROW_START=0
+ROW_END=
 
 if [[ -n "${ROW_END}" ]]; then
   if (( ROW_START > ROW_END )); then
