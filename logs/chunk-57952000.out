@@ -1,0 +1,16 @@
+OBLATE_CSV_PATH=data/nasa_archive/ps_tran_oblate_inputs_combined_tierab_20260416.csv
+=== chunk 06 START ===
+timestamp_local: 2026-05-13 10:40:01 +0800
+SLURM_JOB_ID=57952000
+RESULTS_DIR=/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system_combined742_run1/_chunks_tierb/chunk_06
+ROWS=224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,...
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/miniconda3/envs/oblateness/lib/python3.11/site-packages/exotic_ld/ld_grids.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+row_indices: [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260]
+output_dir: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system_combined742_run1/_chunks_tierb/chunk_06
+summary: overwrite mode
+summary: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system_combined742_run1/_chunks_tierb/chunk_06/multi_system_summary.csv
+timing: wall_seconds=40364.601083 -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system_combined742_run1/_chunks_tierb/chunk_06/run_timing.txt
+=== chunk 06 END ===
+elapsed_wall_seconds=40369
+python_exit_code=0

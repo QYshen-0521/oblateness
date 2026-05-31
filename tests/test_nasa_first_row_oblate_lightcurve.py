@@ -24,12 +24,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from oblateness.transit_ie_sampling import build_lightcurve_time_array_days
+
 # ---------------------------------------------------------------------------
-# 所有可改参数集中在此处
+# 所有可改参数集中在此处（与 ``noiseless_grid_chi2_inversion.PLANET_CONFIG`` 的 csv 约定一致）
 # ---------------------------------------------------------------------------
 USER_CONFIG: dict = {
     # 相对仓库根目录
-    "csv_path": "data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv",
+    # "csv_path": "data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv",  # 原 578 行 Tier A
+    "csv_path": "data/nasa_archive/ps_tran_oblate_inputs_tier_b_derived_20260416.csv",  # Tier B 新源；或设 OBLATE_CSV_PATH
     # 表中第几行行星（0 = 第一个数据行，表头下一行）
     "row_index": 0,
     # 时间轴：以 pl_tranmid 为中心的半天窗口、采样点数
@@ -52,6 +55,15 @@ USER_CONFIG: dict = {
     # Liborbital / 轨道
     "tidally_locked": False,  # 投影椭率模式下 API 要求 False
     "Omega_rad": float(np.pi),  # 文档默认
+    "time_sampling": {
+        "mode": "ingress_egress",
+        "cadence_seconds": 60.0,
+        "edge_pad_cadences": 3,
+        "n_ie_segment_max": 2500,
+        "ecc_max_circular": 0.05,
+        "uniform_fallback_half_width_days": 0.08,
+        "uniform_fallback_n_time": 500,
+    },
     # 出图
     "save_figure": True,
     "figure_filename": "nasa_first_row_oblate_theory_compare.png",
@@ -140,8 +152,21 @@ def test_nasa_csv_first_row_theory_vs_injected_oblate_lightcurve() -> None:
     ld_u = _compute_ld_u(cfg, teff, logg, met)
     ld_j = jnp.array(ld_u, dtype=jnp.float64)
 
-    half = float(cfg["time_half_width_days"])
-    times = jnp.linspace(t0 - half, t0 + half, int(cfg["n_time"]))
+    ts = cfg.get("time_sampling")
+    if not isinstance(ts, dict):
+        ts = None
+    times_np = build_lightcurve_time_array_days(
+        t0_days=float(t0),
+        period_days=float(period),
+        pl_ratdor=float(a),
+        k_rp_over_rs=float(rp),
+        inc_deg=float(inc_deg),
+        ecc=float(ecc),
+        time_half_width_days=float(cfg["time_half_width_days"]),
+        n_time_uniform=int(cfg["n_time"]),
+        time_sampling=ts,
+    )
+    times = jnp.array(times_np, dtype=jnp.float64)
 
     common = dict(
         times=times,

@@ -12,7 +12,9 @@
 
 行星、LD、时间窗与 **注入的** ``projected_f`` / ``projected_theta`` 与
 ``tests/test_nasa_first_row_oblate_lightcurve.py`` 中 ``USER_CONFIG`` 保持一致（首行 CSV、
-JWST NIRSpec Prism LD 等）。网格范围与分辨率见 ``GRID_CONFIG``。
+JWST NIRSpec Prism LD 等）。时间轴默认 **ingress/egress + 60 s 步长**（``PLANET_CONFIG['time_sampling']``），
+新结果写入 ``results/noiseless_ie60/``。环境变量 ``OBLATE_TIME_SAMPLING_MODE=uniform_symmetric``
+可恢复对称均匀窗。网格范围与分辨率见 ``GRID_CONFIG``。
 
 运行::
 
@@ -25,16 +27,32 @@ JWST NIRSpec Prism LD 等）。网格范围与分辨率见 ``GRID_CONFIG``。
 from __future__ import annotations
 
 import csv
+import os
 import warnings
 from pathlib import Path
 
 import numpy as np
 
+from oblateness.transit_ie_sampling import build_lightcurve_time_array_days
+# NASA 凌星可建模输入表（相对仓库根；``batch_noiseless_recovery`` 继承此 ``PLANET_CONFIG``）
+# - 原 Tier A 全量：  data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv  （578 行）
+# - Tier B 派生新源： data/nasa_archive/ps_tran_oblate_inputs_tier_b_derived_20260416.csv （~164 行）
+# 超算补跑 Tier B 时**默认**用 B 表；重跑 578 可 ``export OBLATE_CSV_PATH=.../ps_tran_oblate_inputs_valid_20260416.csv`` 或改下段默认常数
+# ---------------------------------------------------------------------------
+# "csv_path": "data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv",  # 原 578 行表（未删除，仅作注释备查）
+_CSV_TIER_B_DERIVED = "data/nasa_archive/ps_tran_oblate_inputs_tier_b_derived_20260416.csv"
+
+
+def _oblate_input_csv_path() -> str:
+    """由环境变量 ``OBLATE_CSV_PATH`` 覆盖，否则为 Tier B 派生表。"""
+    return os.environ.get("OBLATE_CSV_PATH", _CSV_TIER_B_DERIVED)
+
+
 # ---------------------------------------------------------------------------
 # 与 tests/test_nasa_first_row_oblate_lightcurve.py 中 USER_CONFIG 对齐（恢复注入）
 # ---------------------------------------------------------------------------
 PLANET_CONFIG: dict = {
-    "csv_path": "data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv",
+    "csv_path": _oblate_input_csv_path(),
     "row_index": 0,
     "time_half_width_days": 0.08,
     "n_time": 500,
@@ -48,6 +66,16 @@ PLANET_CONFIG: dict = {
     "fixed_ld_u_coeffs": (0.45, 0.20),
     "tidally_locked": False,
     "Omega_rad": float(np.pi),
+    # I/E + 60 s：见 ``transit_ie_sampling``；``OBLATE_TIME_SAMPLING_MODE=uniform_symmetric`` 可回退旧均匀窗
+    "time_sampling": {
+        "mode": "ingress_egress",
+        "cadence_seconds": 60.0,
+        "edge_pad_cadences": 3,
+        "n_ie_segment_max": 2500,
+        "ecc_max_circular": 0.05,
+        "uniform_fallback_half_width_days": 0.08,
+        "uniform_fallback_n_time": 500,
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -60,9 +88,10 @@ GRID_CONFIG: dict = {
     "theta_min_rad": 0.0,
     "theta_max_rad": np.pi * (1.0 - 1e-9),
     "n_theta": 37,
-    "figure_filename": "noiseless_chi2_grid_f_theta.png",
+    # 新目录，避免覆盖旧 ``results/noiseless_chi2_grid*``
+    "figure_filename": "noiseless_ie60/noiseless_chi2_grid_f_theta.png",
     "save_chi2_npy": True,
-    "chi2_npy_filename": "noiseless_chi2_grid.npz",
+    "chi2_npy_filename": "noiseless_ie60/noiseless_chi2_grid.npz",
 }
 
 
@@ -144,8 +173,21 @@ def run_grid_inversion() -> dict:
     ld_u = _compute_ld_u(pc, teff, logg, met)
     ld_j = jnp.array(ld_u, dtype=jnp.float64)
 
-    half = float(pc["time_half_width_days"])
-    times = jnp.linspace(t0 - half, t0 + half, int(pc["n_time"]))
+    ts = pc.get("time_sampling")
+    if not isinstance(ts, dict):
+        ts = None
+    times_np = build_lightcurve_time_array_days(
+        t0_days=float(t0),
+        period_days=float(period),
+        pl_ratdor=float(a),
+        k_rp_over_rs=float(rp),
+        inc_deg=float(inc_deg),
+        ecc=float(ecc),
+        time_half_width_days=float(pc["time_half_width_days"]),
+        n_time_uniform=int(pc["n_time"]),
+        time_sampling=ts,
+    )
+    times = jnp.array(times_np, dtype=jnp.float64)
 
     common = dict(
         times=times,

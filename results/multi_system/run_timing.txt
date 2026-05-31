@@ -1,3 +1,254 @@
-wall_seconds=13472.867499
-n_row_indices=5
-slurm_job_id=57501028
+# merge_multi_system_chunks — combined chunk timings + merge metadata
+merge_utc=2026-04-21T23:21:52.882880+00:00
+merge_wall_seconds=0.955262
+n_summary_rows_expected=578
+
+### chunk_00
+wall_seconds=62827.047008
+n_row_indices=29
+row_index_min=0
+row_index_max=28
+chunk_id=00
+slurm_job_id=57551111
+
+### chunk_01
+wall_seconds=63799.763864
+n_row_indices=29
+row_index_min=29
+row_index_max=57
+chunk_id=01
+slurm_job_id=57551112
+
+### chunk_02
+wall_seconds=62522.217750
+n_row_indices=29
+row_index_min=58
+row_index_max=86
+chunk_id=02
+slurm_job_id=57551113
+
+### chunk_03
+wall_seconds=65568.874460
+n_row_indices=29
+row_index_min=87
+row_index_max=115
+chunk_id=03
+slurm_job_id=57551114
+
+### chunk_04
+wall_seconds=64342.964432
+n_row_indices=29
+row_index_min=116
+row_index_max=144
+chunk_id=04
+slurm_job_id=57551115
+
+### chunk_05
+wall_seconds=65493.578109
+n_row_indices=29
+row_index_min=145
+row_index_max=173
+chunk_id=05
+slurm_job_id=57551116
+
+### chunk_06
+wall_seconds=63160.718216
+n_row_indices=29
+row_index_min=174
+row_index_max=202
+chunk_id=06
+slurm_job_id=57551117
+
+### chunk_07
+wall_seconds=64915.205826
+n_row_indices=29
+row_index_min=203
+row_index_max=231
+chunk_id=07
+slurm_job_id=57551118
+
+### chunk_08
+wall_seconds=58766.380446
+n_row_indices=29
+row_index_min=232
+row_index_max=260
+chunk_id=08
+slurm_job_id=57551119
+
+### chunk_09
+wall_seconds=72515.253295
+n_row_indices=29
+row_index_min=261
+row_index_max=289
+chunk_id=09
+slurm_job_id=57551120
+
+### chunk_10
+wall_seconds=63691.415648
+n_row_indices=29
+row_index_min=290
+row_index_max=318
+chunk_id=10
+slurm_job_id=57551122
+
+### chunk_11
+wall_seconds=60305.251767
+n_row_indices=29
+row_index_min=319
+row_index_max=347
+chunk_id=11
+slurm_job_id=57551127
+
+### chunk_12
+wall_seconds=65346.935490
+n_row_indices=29
+row_index_min=348
+row_index_max=376
+chunk_id=12
+slurm_job_id=57551130
+
+### chunk_13
+wall_seconds=60759.034770
+n_row_indices=29
+row_index_min=377
+row_index_max=405
+chunk_id=13
+slurm_job_id=57551133
+
+### chunk_14
+wall_seconds=60950.489661
+n_row_indices=29
+row_index_min=406
+row_index_max=434
+chunk_id=14
+slurm_job_id=57551136
+
+### chunk_15
+wall_seconds=61711.276689
+n_row_indices=29
+row_index_min=435
+row_index_max=463
+chunk_id=15
+slurm_job_id=57551137
+
+### chunk_16
+wall_seconds=60898.327783
+n_row_indices=29
+row_index_min=464
+row_index_max=492
+chunk_id=16
+slurm_job_id=57551138
+
+### chunk_17
+wall_seconds=69219.811440
+n_row_indices=29
+row_index_min=493
+row_index_max=521
+chunk_id=17
+slurm_job_id=57551139
+
+### chunk_18
+wall_seconds=65368.557315
+n_row_indices=28
+row_index_min=522
+row_index_max=549
+chunk_id=18
+slurm_job_id=57551140
+
+### chunk_19
+wall_seconds=64385.305552
+n_row_indices=28
+row_index_min=550
+row_index_max=577
+chunk_id=19
+slurm_job_id=57551141
+
+
+
+### APPEND 2026-04-22T13:35:30.318447+00:00 chunk_root=/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/_chunks_tierb
+
+# merge_multi_system_chunks — combined chunk timings + merge metadata
+merge_utc=2026-04-22T13:35:30.292255+00:00
+merge_wall_seconds=0.235791
+n_summary_rows_expected=164
+
+### chunk_00
+wall_seconds=36867.601814
+n_row_indices=17
+row_index_min=0
+row_index_max=16
+chunk_id=00
+slurm_job_id=57565667
+
+### chunk_01
+wall_seconds=33859.376854
+n_row_indices=17
+row_index_min=17
+row_index_max=33
+chunk_id=01
+slurm_job_id=57565668
+
+### chunk_02
+wall_seconds=38747.997040
+n_row_indices=17
+row_index_min=34
+row_index_max=50
+chunk_id=02
+slurm_job_id=57565669
+
+### chunk_03
+wall_seconds=38884.177674
+n_row_indices=17
+row_index_min=51
+row_index_max=67
+chunk_id=03
+slurm_job_id=57565670
+
+### chunk_04
+wall_seconds=34735.213926
+n_row_indices=16
+row_index_min=68
+row_index_max=83
+chunk_id=04
+slurm_job_id=57565672
+
+### chunk_05
+wall_seconds=36001.543320
+n_row_indices=16
+row_index_min=84
+row_index_max=99
+chunk_id=05
+slurm_job_id=57565673
+
+### chunk_06
+wall_seconds=36310.508231
+n_row_indices=16
+row_index_min=100
+row_index_max=115
+chunk_id=06
+slurm_job_id=57565675
+
+### chunk_07
+wall_seconds=34579.708472
+n_row_indices=16
+row_index_min=116
+row_index_max=131
+chunk_id=07
+slurm_job_id=57565677
+
+### chunk_08
+wall_seconds=38020.615814
+n_row_indices=16
+row_index_min=132
+row_index_max=147
+chunk_id=08
+slurm_job_id=57565678
+
+### chunk_09
+wall_seconds=32446.129737
+n_row_indices=16
+row_index_min=148
+row_index_max=163
+chunk_id=09
+slurm_job_id=57565680
+

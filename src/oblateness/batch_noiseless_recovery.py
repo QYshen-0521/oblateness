@@ -1,11 +1,13 @@
 """
-批量无噪声反演：注入网格、粗网格 + 局部细化、A1/C1 判据与 :math:`f`–:math:`\\theta` 状态图。
+批量无噪声反演：注入网格、粗网格 + 局部细化、**A1 两态**与 :math:`f`–:math:`\\theta` 状态图。
 
-数学定义与 ``worklog.md`` 中「批量无噪声反演」节一致；:math:`\\chi^2` 与单点脚本相同，
-用 :math:`\\sum_k(F_{\\mathrm{obl},k}-F_{\\mathrm{inj},k})^2`（不显式算 :math:`F_0`）。
+**分类（见 ``worklog.md``「Agent 2 委派：无噪声恢复两态化（仅 A1）」）**：`status` 仅为 **success**
+（满足 A1）或 **failed**（不满足）。C1（去重后次小 :math:`\\chi^2` 间隙）**不再参与**分类，仍写入
+每条结果与 npz 作**诊断**。输出默认在 ``results/batch_noiseless_a1_only_ie60/``（I/E 60 s 采样），避免覆盖旧
+``batch_noiseless_*``。
 
-**仅改下方配置字典**即可调整行星/LD、注入扫参、粗/细网格（粗：\\(f\\) 步长与 \\(\\theta\\) 度步长；
-细：`f_step`、`theta_deg_step`）、判据与输出文件名。
+数学定义与 ``worklog.md``「批量无噪声反演」一致；:math:`\\chi^2` 用
+:math:`\\sum_k(F_{\\mathrm{obl},k}-F_{\\mathrm{inj},k})^2`。
 
 运行（需 ``pip install -e ".[squishy]"``）::
 
@@ -21,6 +23,7 @@ from typing import Any, Literal
 
 import numpy as np
 
+from oblateness.transit_ie_sampling import build_lightcurve_time_array_days
 from oblateness.noiseless_grid_chi2_inversion import (
     PLANET_CONFIG,
     _col,
@@ -96,13 +99,13 @@ C1_DEDUP_CONFIG: dict[str, Any] = {
 BATCH_RUN_CONFIG: dict[str, Any] = {
     # None = 全部注入格点；设为例如 3 便于调试
     "max_injections": None,
-    "status_figure_filename": "batch_noiseless_f_theta_status.png",
+    "status_figure_filename": "batch_noiseless_a1_only_ie60/batch_noiseless_f_theta_status.png",
     "save_results_npz": True,
-    "results_npz_filename": "batch_noiseless_recovery.npz",
+    "results_npz_filename": "batch_noiseless_a1_only_ie60/batch_noiseless_recovery.npz",
 }
 
 
-Status = Literal["clean", "degenerate", "failed"]
+Status = Literal["success", "failed"]
 
 
 def _theta_distance_deg(a_deg: float, b_deg: float) -> float:
@@ -243,8 +246,21 @@ def _build_system(pc: dict[str, Any]) -> tuple[Any, str, np.ndarray]:
     ld_u = _compute_ld_u(pc, teff, logg, met)
     ld_j = jnp.array(ld_u, dtype=jnp.float64)
 
-    half = float(pc["time_half_width_days"])
-    times = jnp.linspace(t0 - half, t0 + half, int(pc["n_time"]))
+    ts = pc.get("time_sampling")
+    if not isinstance(ts, dict):
+        ts = None
+    times_np = build_lightcurve_time_array_days(
+        t0_days=float(t0),
+        period_days=float(period),
+        pl_ratdor=float(a),
+        k_rp_over_rs=float(rp),
+        inc_deg=float(inc_deg),
+        ecc=float(ecc),
+        time_half_width_days=float(pc["time_half_width_days"]),
+        n_time_uniform=int(pc["n_time"]),
+        time_sampling=ts,
+    )
+    times = jnp.array(times_np, dtype=jnp.float64)
 
     common = dict(
         times=times,
@@ -271,7 +287,7 @@ def run_single_injection(
     f_inj: float,
     theta_inj_deg: float,
 ) -> dict[str, Any]:
-    """一次注入：粗网格 :math:`\\arg\\min` → 邻域细化 → 全局最优 + A1/C1。"""
+    """一次注入：粗网格 :math:`\\arg\\min` → 邻域细化 → 全局最优；**分类仅 A1**，C1 仅诊断。"""
     th_inj_rad = float(np.deg2rad(theta_inj_deg))
     f_inj_arr = np.array(
         system.lightcurve(params={"projected_f": float(f_inj), "projected_theta": th_inj_rad})
@@ -318,12 +334,7 @@ def run_single_injection(
     gap_thr = _delta_chi2_threshold(chi2_1, dcfg)
     c1 = bool((gap) > gap_thr)
 
-    if a1 and c1:
-        status: Status = "clean"
-    elif a1 and not c1:
-        status = "degenerate"
-    else:
-        status = "failed"
+    status: Status = "success" if a1 else "failed"
 
     return {
         "f_inj": f_inj,
@@ -341,7 +352,7 @@ def run_single_injection(
         "epsilon_f": epsilon_f,
         "epsilon_theta_deg": epsilon_theta_deg,
         "A1": a1,
-        "C1": c1,
+        "C1": c1,  # 诊断：不参与 status
         "status": status,
         "f_hat_coarse": f0_hat,
         "theta_hat_coarse_rad": th0_hat,
@@ -390,9 +401,9 @@ def _save_status_figure(
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    color = {"clean": "#2ca02c", "degenerate": "#ff7f0e", "failed": "#d62728"}
+    color = {"success": "#2ca02c", "failed": "#d62728"}
     fig, ax = plt.subplots(figsize=(9.0, 6.0), dpi=120)
-    for s in ("clean", "degenerate", "failed"):
+    for s in ("success", "failed"):
         pts = [r for r in results if r["status"] == s]
         if not pts:
             continue
@@ -410,7 +421,7 @@ def _save_status_figure(
     ax.set_xlabel(r"injected $f_{\mathrm{inj}}$")
     ax.set_ylabel(r"injected $\theta_{\mathrm{inj}}$ (deg)")
     title = results[0]["pl_name"] if results else ""
-    ax.set_title(f"{title} — noiseless batch recovery (A1 ∧ C1 = clean)")
+    ax.set_title(f"{title} — noiseless batch recovery (A1 only; C1 diagnostic)")
     ax.set_xlim(INJECTION_GRID_CONFIG["f_min"] - 0.005, INJECTION_GRID_CONFIG["f_max"] + 0.005)
     ax.set_ylim(
         INJECTION_GRID_CONFIG["theta_inj_deg_min"] - 5.0,
@@ -468,10 +479,9 @@ def main() -> None:
     print("n_results:", len(results))
     if not results:
         return
-    n_clean = sum(1 for r in results if r["status"] == "clean")
-    n_deg = sum(1 for r in results if r["status"] == "degenerate")
+    n_ok = sum(1 for r in results if r["status"] == "success")
     n_fail = sum(1 for r in results if r["status"] == "failed")
-    print("status counts — clean:", n_clean, "degenerate:", n_deg, "failed:", n_fail)
+    print("status counts — success:", n_ok, "failed:", n_fail)
 
     fig_path = _save_status_figure(results)
     print("saved figure:", fig_path)

@@ -1,0 +1,46 @@
+row_selection: inclusive range [5,20] (16 indices)
+=== oblateness-multi START ===
+timestamp_local: 2026-04-19 10:01:40 +0800
+hostname: node012.pi.sjtu.edu.cn
+SLURM_JOB_ID=57512495
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/miniconda3/envs/oblateness/lib/python3.11/site-packages/exotic_ld/ld_grids.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.15/teff5100/logg3.5/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.05/teff5300/logg4.5/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.15/teff5900/logg4.3/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.3/teff6300/logg4.0/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.15/teff6000/logg4.2/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.15/teff7000/logg4.2/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.15/teff3500/logg5.0/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.15/teff3800/logg4.7/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.15/teff4000/logg4.7/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.0/teff6700/logg4.2/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.1/teff4600/logg4.7/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.25/teff5400/logg4.3/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.05/teff6300/logg4.2/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.1/teff5600/logg4.5/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/src/oblateness/batch_noiseless_recovery.py:243: UserWarning: ExoTiC-LD failed (Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.25/teff5700/logg4.4/mps1_spectra.dat, msg=Cannot connect to URL.); using fixed_ld_u_coeffs.
+  ld_u = _compute_ld_u(pc, teff, logg, met)
+row_indices: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+summary: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/multi_system_summary.csv
+timing: wall_seconds=68113.572196 -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/run_timing.txt
+=== oblateness-multi END ===
+timestamp_local: 2026-04-20 04:57:00 +0800
+elapsed_wall_seconds=68120
+python_exit_code=0
+Done. Results under: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system
+timing_line_appended_to: /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/logs/batch_timing.log

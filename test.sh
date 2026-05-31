@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # 超算 Slurm：多系统无噪声批量（见 worklog「多系统批量无噪声测试」）
-# 日常修改：WORKDIR 下 RESULTS_DIR / ROWS；环境与分区按集群策略调整。
+# 日常修改：WORKDIR、RESULTS_*、行号选择（ROWS 或 ROW_START/ROW_END）；环境与分区按集群策略调整。
 # 提交：cd 到本仓库根目录后执行  sbatch test.sh
 # =============================================================================
 
@@ -18,25 +18,67 @@
 
 set -euo pipefail
 
-# --- Conda 环境（与你在 Startrack 任务中一致；若用 module load / 其他 env 请改此处）---
-source activate oblateness
+# --- 本仓库在服务器上的绝对路径（须先于 conda 初始化，用于探测同级 miniconda3）---
+WORKDIR="${WORKDIR:-/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness}"
 
-# --- 本仓库在服务器上的绝对路径 ---
-WORKDIR="/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness"
+# --- Conda：Slurm 非交互作业不加载 ~/.bashrc，「source activate」会报「没有那个文件或目录」---
+# 必须先 source conda.sh，再 conda activate。若仍失败，请 export CONDA_ROOT=/path/to/miniconda3
+_oblateness_parent="$(cd "$(dirname "$WORKDIR")" && pwd)"
+if [[ -n "${CONDA_ROOT:-}" && -f "${CONDA_ROOT}/etc/profile.d/conda.sh" ]]; then
+  # shellcheck disable=SC1090
+  source "${CONDA_ROOT}/etc/profile.d/conda.sh"
+elif [[ -f "${_oblateness_parent}/miniconda3/etc/profile.d/conda.sh" ]]; then
+  # shellcheck disable=SC1090
+  source "${_oblateness_parent}/miniconda3/etc/profile.d/conda.sh"
+elif [[ -f "${HOME}/miniconda3/etc/profile.d/conda.sh" ]]; then
+  # shellcheck disable=SC1090
+  source "${HOME}/miniconda3/etc/profile.d/conda.sh"
+elif [[ -f "${HOME}/anaconda3/etc/profile.d/conda.sh" ]]; then
+  # shellcheck disable=SC1090
+  source "${HOME}/anaconda3/etc/profile.d/conda.sh"
+else
+  echo "ERROR: conda.sh not found. Set CONDA_ROOT to your Miniconda/Anaconda root." >&2
+  exit 1
+fi
+conda activate "${CONDA_ENV:-oblateness}"
+
 cd "$WORKDIR" || { echo "cd failed: $WORKDIR" >&2; exit 1; }
 
 # src 布局：在未 pip install -e 时也能 import oblateness（仍须安装 squishy/JAX 等，见 pyproject.toml [squishy]）
 export PYTHONPATH="${WORKDIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
 
+# NASA 凌星 CSV：代码默认 Tier B 派生表；重跑原 578 可： export OBLATE_CSV_PATH="data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv"
+[[ -n "${OBLATE_CSV_PATH:-}" ]] && echo "OBLATE_CSV_PATH=${OBLATE_CSV_PATH}"
+
 # --- 结果保存路径（二选一，见下）---
 # 方式 A（默认）：写入仓库内 results/<子目录>，适合与代码同盘、小体量。
-RESULTS_SUBDIR="multi_system"
+RESULTS_SUBDIR="multi_system_a1_only"
+# 历史默认（注释）：RESULTS_SUBDIR="multi_system"
 # 方式 B：写入任意绝对路径（大存储 / NFS）；非空则优先于 RESULTS_SUBDIR，并导出给 Python。
 # 例：RESULTS_DIR="/dssg/home/acct-tdlffb/scratch/oblateness_multi_system_20260418"
 RESULTS_DIR=""
 
-# --- 要跑的 CSV 行号（0 = 首条数据行），逗号分隔 ---
+# --- 要跑的 CSV 行号（0 = 首条数据行）；二选一 ---
+# 方式 1：显式列表，逗号分隔（当下面 ROW_END 留空时使用）
 ROWS="0,1,2,3,4"
+# 方式 2：闭区间 [ROW_START, ROW_END]（含端点）。若 ROW_END 非空，则忽略上面的 ROWS，自动展开为
+#   ROW_START, ROW_START+1, ..., ROW_END。例：ROW_START=0 ROW_END=100 -> 共 101 行（0..100）
+ROW_START=5
+ROW_END=20
+
+if [[ -n "${ROW_END}" ]]; then
+  if (( ROW_START > ROW_END )); then
+    echo "ERROR: ROW_START (${ROW_START}) > ROW_END (${ROW_END})" >&2
+    exit 1
+  fi
+  ROWS=$(seq -s, "${ROW_START}" "${ROW_END}")
+  ROW_COUNT=$((ROW_END - ROW_START + 1))
+  ROWS_LOG="[${ROW_START},${ROW_END}]"
+  echo "row_selection: inclusive range ${ROWS_LOG} (${ROW_COUNT} indices)"
+else
+  ROWS_LOG="${ROWS}"
+  echo "row_selection: explicit ROWS list"
+fi
 
 mkdir -p logs
 
@@ -68,7 +110,7 @@ echo "python_exit_code=${PY_EXIT}"
 echo "Done. Results under: ${RESULT_PATH}"
 
 # 追加一行到 logs/，便于多作业对比（与 %j.out 内容一致的信息摘要）
-TIMING_LINE="$(date '+%Y-%m-%dT%H:%M:%S%z') job=${SLURM_JOB_ID:-local} elapsed_s=${SECONDS} exit=${PY_EXIT} rows=${ROWS} results=${RESULT_PATH}"
+TIMING_LINE="$(date '+%Y-%m-%dT%H:%M:%S%z') job=${SLURM_JOB_ID:-local} elapsed_s=${SECONDS} exit=${PY_EXIT} rows=${ROWS_LOG} results=${RESULT_PATH}"
 echo "${TIMING_LINE}" >> "${WORKDIR}/logs/batch_timing.log"
 echo "timing_line_appended_to: ${WORKDIR}/logs/batch_timing.log"
 

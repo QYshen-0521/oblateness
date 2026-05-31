@@ -1,0 +1,4 @@
+=== merge_multi_system_chunks START 2026-04-22T07:21:49+08:00 ===
+SLURM_JOB_ID=57551142
+merged 578 rows -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/multi_system_summary.csv
+merged timing -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/run_timing.txt

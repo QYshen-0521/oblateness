@@ -1,0 +1,5 @@
+=== merge_multi_system_chunks START 2026-05-14T05:58:23+08:00 ===
+SLURM_JOB_ID=57952014
+OBLATE_MULTI_RESULTS_SUBDIR=multi_system_combined742_run1
+wrote 742 data rows -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system_combined742_run1/multi_system_summary_a1only.csv (append=True)
+merged timing -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system_combined742_run1/run_timing_a1only.txt (append=True)

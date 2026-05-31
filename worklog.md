@@ -11,6 +11,17 @@
 - **黑板纪律**：每次**新下载或更新**数据文件后，在本文件 **[Session Logs]** 追加一条记录（日期、角色、来源/链接摘要、`data/` 下相对路径、一行用途说明）。不在此粘贴大段表格内容。
 - **与 `results/` 分工**：仿真与管线生成物仍以 `results/` 为主（见既有 Session Logs）；`data/` 专放自外源拉取的输入数据。
 
+### 上下文续接要点（会话压缩 / 新 Chat 恢复）
+
+- **黑板文件名**：根目录 `worklog.md`（小写）与 `.cursorrules` 中的 `WORKLOG.md` 指同一黑板。
+- **Tier A / B / 合并表（行数以 `wc -l` 为准）**：`ps_tran_oblate_inputs_valid_20260416.csv` **579** 行（578 数据 + 表头），**未覆盖**；Tier B 仅 `ps_tran_oblate_inputs_tier_b_derived_20260416.csv` **165** 行（164 数据 + 表头）；合并 `ps_tran_oblate_inputs_combined_tierab_20260416.csv` **743** 行（742 数据 + 表头）。生成：`python -m oblateness.build_tier_b_oblate_inputs`。
+- **`OBLATE_CSV_PATH`**：若干入口默认 CSV 为 **Tier B 派生表**；重跑**原 578** 多系统或对齐旧 `row_index` 时须显式 `export OBLATE_CSV_PATH=data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv`（见 `submit_multi_system_chunks.sh`、`test_chunk.sh`、`test.sh` 注释）。
+- **C1 判据**：粗、细网格 \(\chi^2\) 合并后须对 \((f,\theta)\) **去重**再取 \(\chi^2_{(2)}-\chi^2_{(1)}\)，否则无噪声下出现假简并；实现 `C1_DEDUP_CONFIG`、`_dedupe_chi2_by_f_theta`（`batch_noiseless_recovery.py`）。
+- **578 多系统 Slurm**：`submit_multi_system_chunks.sh` → `test_chunk.sh` → `merge_multi_system_slurm.sh`；chunk 独占目录，**禁止**并发写同一 `multi_system_summary.csv`。最终汇总：`results/multi_system/multi_system_summary.csv`、`run_timing.txt`。
+- **`n_clean≠0` 子集导出**：`data/nasa_archive/multi_system_summary_n_clean_nonzero.csv`（**123** 行 = 122 数据 + 表头，以当前仓库为准）。
+- **补跑 Tier B**：对 B 或合并表设置 `OBLATE_CSV_PATH`，用 `oblateness_input_tier`、`tier_a_legacy_row_index`、`keyparams_row_index`、`injection_batch_578_completed` 区分行语义、避免与已完成 578 重复；新宿主 LD：`prefetch_exotic_ld_data`（`--all-csv` 当前针对 valid 578，扩到 B/合并表需 Executor 对齐参数）。
+- **Planner 仍 Pending**：Task Board「细化椭率探测的数学模型」。
+
 ### squishyplanet `OblateSystem` ↔ 本课题 \((f,\theta)\) ↔ NASA `ps`（keyparams）列
 
 依据 [OblateSystem API](https://squishyplanet.readthedocs.io/en/latest/oblate_system.html)（文档日期以官方为准）。**角度在代码中均为弧度**；NASA 表 `pl_orbincl` 多为度，需换算。
@@ -37,7 +48,51 @@
 | `ld_u_coeffs` | 恒星 LD 多项式系数 \(I(\mu)/I_0=1-\sum u_i(1-\mu)^i\) | — | 由 **ExoTiC-LD**（或同类）根据 `st_teff`, `st_logg`, `st_met` + **仪器波段**生成（本管线默认 **JWST** 通带；见 [fit_oblate_transit 教程](https://squishyplanet.readthedocs.io/en/latest/tutorials/fit_oblate_transit.html)） |
 | （恒星） | ExoTiC-LD 输入 | — | `st_teff`, `st_logg`, `st_met`（`st_metratio` 为标尺标签如 `[Fe/H]`，数值用 `st_met`） |
 
-**筛选文件说明**：`data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv` 自 `ps_tran_flag_keyparams_20260416.csv` 保留「凌星+恒星+轨道」建模直接需要的列且下列字段为**非空数值**且对应 `*lim` 为 **0**（空白的 `lim` 视为 0）：`pl_orbper`, `pl_ratdor`, `pl_ratror`, `pl_orbincl`, `pl_tranmid`, `pl_orbeccen`, `st_teff`, `st_logg`, `st_met`。其余列原样保留便于后续分析；**578** 个行星（+表头）。未要求 `pl_imppar` 等，Executor 可做一致性检查。
+**筛选文件说明（Tier A，沿用）**：`data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv` 自 `ps_tran_flag_keyparams_20260416.csv` 保留「凌星+恒星+轨道」建模直接需要的列且下列字段为**非空数值**且对应 `*lim` 为 **0**（空白的 `lim` 视为 0）：`pl_orbper`, `pl_ratdor`, `pl_ratror`, `pl_orbincl`, `pl_tranmid`, `pl_orbeccen`, `st_teff`, `st_logg`, `st_met`。其余列原样保留便于后续分析；**578** 个行星（+表头）。未要求 `pl_imppar` 等，Executor 可做一致性检查。下文称此类行为 **`A_archive_direct`**（档案直接列齐全）。
+
+### NASA 可建模输入：Tier B（派生几何）+ 合并表与防重复注入（Planner → Agent 2）
+
+**问题**：档案 `ps` 中部分系统（如 TOI-2537 b）**有** `pl_orbsmax`（半长轴，常见 **AU**）与 **`st_rad`**（恒星半径，常见 **\(R_\odot\)**），但 **`pl_ratdor`（\(a/R_\star\)）为空**，被 Tier A 误筛；仍可在**单位自洽**下派生 \(a/R_\star\) 参与 `OblateSystem` 与光变生成。
+
+**目标（先松后严）**：在**同一张** `ps_tran_flag_keyparams` 快照上，对 **Tier A 未收录**的行，用**较宽松**规则找回「仅缺 `pl_ratdor`（及可选缺 `pl_ratror`）但可派生」的源；写入**合并输入表**时**必须与 Tier A 区分**，并带**防重复批量注入**字段，避免对已跑完 578 多系统注入测试的系统再提交。
+
+---
+
+**Tier B（`B_derived_geometry`，宽松首版）** 纳入条件（在 **`tran_flag=1` 且 `default_flag=1`** 的 keyparams 子集上操作，与全表下载一致）：
+
+1. **不在 Tier A**：该行不满足 Tier A 的「九列直接有效」定义（通常表现为 **`pl_ratdor` 空或 lim 非 0** 等）。  
+2. **其余与 Tier A 同要求的直接列**仍须满足（非空、可解析、`lim=0` 规则与 Tier A 相同）：  
+   `pl_orbper`, `pl_orbincl`, `pl_tranmid`, `pl_orbeccen`, `st_teff`, `st_logg`, `st_met`。  
+3. **`pl_ratror`**：若档案已有且通过 lim，则用档案值；若为空，**可选（本阶段宽松）** 用 `pl_rade`（地球半径）与 `st_rad`（\(R_\odot\)）派生 \(R_p/R_\star\)，**仅当**两列均有效且 lim 合规；**单位与列定义必须以** [API PS columns](https://exoplanetarchive.ipac.caltech.edu/docs/API_PS_columns.html) **为准**，Executor 实现前在代码注释或常量处写明换算。  
+4. **派生 \(a/R_\star\)**：当 `pl_ratdor` 不可用但 **`pl_orbsmax`** 与 **`st_rad`** 均有效且对应 `*lim` 合规时，  
+   \[
+   (a/R_\star)_\mathrm{derived} = \frac{a\,[\mathrm{AU}]}{R_\star\,[R_\odot]} \times \frac{1\,\mathrm{AU}}{R_\odot},
+   \]  
+   其中 \(1\,\mathrm{AU}/R_\odot\) 与仓库 `constants`（IAU/CODATA 一致）对齐；**若档案 `pl_ratdor` 非空且通过 Tier A，禁止覆盖**，以档案为准。  
+5. **质量过滤（宽松）**：派生值须为**有限正数**且在合理范围（如 \(a/R_\star>0\)、\(R_p/R_\star\le 1\) 等简单 sanity check）；极端异常行可记日志后丢弃或标 `QC_flag`。
+
+---
+
+**合并输出 CSV（建议路径，Executor 可微调文件名/日期）**  
+例如：`data/nasa_archive/ps_tran_oblate_inputs_combined_20260416.csv`（或新日期后缀）。
+
+**必须包含的区分与防重复列**（由 Agent 2 生成，不得手填遗漏）：
+
+| 列名 | 含义 |
+|------|------|
+| **`oblateness_input_tier`** | **`A_archive_direct`**：与现 `ps_tran_oblate_inputs_valid_20260416.csv` 行一一对应（原 578）；**`B_derived_geometry`**：本轮新找回、至少对 `pl_ratdor` 或 `pl_ratror` 使用了派生。 |
+| **`pl_ratdor_source`** | `archive` \| `derived_orbsmax_st_rad`（若派生则同时可在旁路保留档案空列或写入派生列名如 `pl_ratdor_used`，由 Executor 定一种即可，但须在 Session Log 说明）。 |
+| **`pl_ratror_source`** | `archive` \| `derived_rade_st_rad` \| `missing_policy`（若仅 archive 则填 archive）。 |
+| **`keyparams_row_index`** | 该行在 **`ps_tran_flag_keyparams_*.csv`** 中的 **0-based 数据行索引**（表头下一行为 0），用于回查原始 NASA 行与复现筛选。 |
+| **`tier_a_legacy_row_index`** | 若本行属于 Tier A：**在旧文件 `ps_tran_oblate_inputs_valid_20260416.csv` 中的 0-based 行号**（0…577）；若为 Tier B：**留空或 -1**。 |
+| **`injection_batch_578_completed`** | **布尔或 0/1**：若该行星**已出现在** `results/multi_system/multi_system_summary.csv`（或已合并的 Slurm 全量汇总）且成功跑过注入网格（可按 `error` 空且存在 `n_clean`/`n_degenerate`/`n_failed` 判定），则为 **1**；否则 **0**。Tier B 新行默认 **0**。更新汇总后由脚本**回填**或单次 join 生成。 |
+
+**Slurm / 多系统提交规则**：
+
+- **仅对** `injection_batch_578_completed == 0` **且** `oblateness_input_tier == B_derived_geometry` **的行**（或用户显式给出的补跑列表）提交新 chunk，避免对已完成 578 系统重复计算。  
+- Tier A 行若需重跑，须**显式**改标志或单独 `--rows`，不得与默认「只补 B」混用。
+
+**验收**：合并表行数 = 578 +（新找回的 Tier B 行数）；**578 行的 `oblateness_input_tier` 全为 `A_archive_direct`** 且 **`tier_a_legacy_row_index` 与现有多系统 `row_index` 可对应**；抽查 TOI-2537 b 若被找回应在 Tier B 且 `pl_ratdor_source=derived_orbsmax_st_rad`。
 
 ### 无噪声反演：二维网格 \(\chi^2\)（Planner 定案 → Executor 实现）
 
@@ -116,9 +171,135 @@
 
 **超算 `test.sh`（与 Startrack 作业模板对齐）**：`#SBATCH` 使用分区 `64c512g`、`--account=acct-tdlffb`、`--nodes=1`、`--ntasks-per-node=1`、`--cpus-per-task=4`、`--mem=16G`、`--output=logs/%j.out`；`set -euo pipefail`；`source activate astro_ml`；`WORKDIR` 指向服务器上本仓库路径。**结果路径**：脚本内 **`RESULTS_SUBDIR`**（默认 `multi_system` → 写入 `results/<subdir>/`）或 **`RESULTS_DIR`**（非空时为**绝对路径**，调用 `python -m oblateness.multi_system_batch_noiseless --output-dir`，等价环境变量 `OBLATE_MULTI_OUTPUT_DIR`）。详见 Session Log 2026-04-18（Executor）第二条。
 
+### 多系统 Slurm 并行与汇总（578 系统 ≈ 20 组）— 委派 Agent 2（2026-04-20）
+
+**用户目标**：在超算上**明显加快整批**（`ps_tran_oblate_inputs_valid_*.csv` 共 **578** 条数据行，`row_index` **0…577**），将索引分为约 **20** 组并行 `sbatch`，多作业**同时**运行；最终在**统一路径**交付：
+
+- `results/multi_system/multi_system_summary.csv`
+- `results/multi_system/run_timing.txt`
+
+**分组（规格）**
+
+- 组数 **`N_GROUPS ≈ 20`**（可配置常量，如 20；若需整除可改为 17×34 等，以黑板/代码注释为准）。
+- **行号集合**：对 0…577 **连续分段**、**无重叠、无遗漏**（例如 `ceil(578/20)=29`，前若干组 29 行、最后一组取余；或尽量均分使每组相差不超过 1）。
+- 每组调用与现有多系统入口一致：`python -m oblateness.multi_system_batch_noiseless --rows <逗号分隔>`（或等价环境变量），**不得**在两组中重复同一 `row_index`。
+
+**并行阶段输出目录（必选，避免竞态）**
+
+- **禁止**多个 Slurm 作业**同时**读写**同一个** `results/multi_system/multi_system_summary.csv`。当前实现为「读已有 + 合并 + 写回」，并发会导致**丢失更新/损坏**；**不能**依赖「各组完成时刻几乎不同」作为同步机制。
+- 每组作业使用**独占**输出根目录，例如：  
+  `results/multi_system/_chunks/chunk_00/` … `chunk_19/`（子目录名与分段规则由实现定，须固定、可复现）。  
+  每组在该目录内生成与现行为一致的 per-row `status_*.png`、`batch_*.npz`，以及**本组** `multi_system_summary.csv`（或等价中间表）与（可选）**本组** `run_timing.txt`。
+
+**合并阶段（单次写最终文件）**
+
+- 全部 chunk 作业**成功结束后**，再执行**一次**合并步骤（独立 Slurm 作业 `afterok` 依赖链，或文档化的人工命令二选一，**优先自动化**）：
+  1. **汇总 CSV**：将各 chunk 的 summary **按 `row_index` 升序合并**为单一 `results/multi_system/multi_system_summary.csv`（列名与现 CSV 一致；若 chunk 内已有表头，合并时去重表头）；确认 **578 行数据**（或失败行在 `error` 列记录后的总行数）与无重复 `row_index`。
+  2. **总计时文件** `results/multi_system/run_timing.txt`：写入**结构化多段**内容，至少包含：每个 chunk 的 `wall_seconds`、`SLURM_JOB_ID`（若有）、`row_indices` 范围或条数；可选增加「合并作业提交时间」「从首作业提交到合并完成」的日历耗时说明。**禁止**依赖「最后一组覆盖写」冒充全表计时。
+
+**提交侧（实现建议）**
+
+- 仓库提供 **shell 驱动脚本**（名称由 Executor 定，如 `submit_multi_system_chunks.sh`）：根据 `N_GROUPS` 打印或提交 20 个 `sbatch`，传入 `CHUNK_ID`、`ROWS`、`OBLATE_MULTI_OUTPUT_DIR`（或 `--output-dir`）。  
+- `test.sh` 可改为接受环境变量/参数以适配「单 chunk」模式，或新增 `test_chunk.sh` 避免破坏原单作业用法。  
+- 合并可提供 `python -m oblateness.<merge_module>` 或 `tools/merge_multi_system_chunks.py`，**仅读**各 chunk 目录、**写**最终两文件。
+
+**验收**
+
+- 并行 20 作业 + 1 合并（或等价）后，`results/multi_system/multi_system_summary.csv` 覆盖 578 系统；`run_timing.txt` 可追溯各 chunk 墙钟与作业号。  
+- Session Log 由 Executor 追加：脚本路径、示例提交命令、合并命令。
+
+### Agent 2 委派：无噪声恢复 **两态化（仅 A1）** + **禁止覆盖既有结果**（用户定案，待实现）
+
+**动机**：无噪声阶段后续将加噪声测试；当前 **C1（次小 \(\chi^2\) 间隙）** 标度与离散网格耦合，易把好系统判成「简并」。先采用**较弱、可解释**的划分，避免 C1 进入主结论。
+
+**判据定案（取代原「clean = A1∧C1」）**
+
+- **成功**：满足 **A1**（与现实现一致）：粗+细网格合并后的全局最优 \((\hat f,\hat\theta)\) 满足 \(|\hat f-f_\mathrm{inj}|<\epsilon_f\)、\(|\hat\theta-\theta_\mathrm{inj}|<\epsilon_\theta\)（\(\epsilon\) 仍为 **细网格**步长之半；\(\theta\) 用既有最短角距规则）。
+- **失败**：不满足 A1。
+- **不再输出「简并」作为第三态**：原 `degenerate` 取消；若需向后兼容旧汇总列，可令 `n_degenerate` **恒为 0** 并注释废弃，或改为仅两列 **`n_success` / `n_failed`**（推荐后者，由 Executor 统一重命名并更新 `merge_multi_system_chunks.py`、测试与 Slurm 脚本中列期望）。
+
+**C1 / \(\chi^2\) 次小间隙（可选保留）**
+
+- **不得**再参与 `status` 或 success/fail 计数。
+- 建议**仍计算**并写入 per-injection 记录（及 npz）：去重后的 \(\chi^2_{(1)},\chi^2_{(2)},\Delta\)、`n_chi2_unique_c1` 等，字段可保留原名或加 `_diagnostic` 后缀，供日后噪声阶段或相对阈值实验使用；`DELTA_CHI2_CONFIG` 可保留但仅用于这些诊断字段，避免删代码过多。
+
+**须修改的代码（路径与要点）**
+
+1. **`src/oblateness/batch_noiseless_recovery.py`**
+   - `Status`（或等价类型）：仅 **`success` | `failed`**（若保留字符串 `clean` 表示成功，须在黑板/CSV 列名一处统一说明，避免与旧图例混淆）。
+   - `run_single_injection`：`status = success if a1 else failed`；去掉对 C1 的分支。
+   - `_save_status_figure`：仅两种颜色/图例（成功 / 失败）；标题或说明改为「A1 only」。
+   - `_save_npz`：仍写入 `chi2_1`, `chi2_2`, `chi2_gap`, `A1`；`C1` 可改为恒 `nan` / 省略，或保留数值但**不用于分类**（Executor 选一种并在 Session Log 说明）。
+   - `BATCH_RUN_CONFIG`：**默认输出文件名或子目录**改为新路径（见下节），不得仍指向会覆盖旧物的 `batch_noiseless_f_theta_status.png` / `batch_noiseless_recovery.npz`。
+
+2. **`src/oblateness/multi_system_batch_noiseless.py`**
+   - 汇总行：按两态统计 `n_success`、`n_failed`（或等价命名）；更新 `fieldnames` 及追加/合并逻辑。
+   - 默认 `output_subdir` 或文档要求：指向**新**子目录（见下），避免默认写 `results/multi_system/` 覆盖历史。
+
+3. **`src/oblateness/merge_multi_system_chunks.py`**（若列名变更）
+   - 合并时期望的 summary 列与最终写出路径对齐；合并产物同样写入**新文件名或新目录**。
+
+4. **测试**
+   - 更新断言 `status` / 计数中不再出现 `degenerate` 的用例（若有）；必要时新增烟测：同一注入在仅 A1 下为 success。
+
+5. **Shell（`test.sh` / `test_chunk.sh` / `submit_multi_system_chunks.sh`）**
+   - 默认或注释示例：`RESULTS_SUBDIR`、`OBLATE_MULTI_OUTPUT_DIR`、`RESULTS_DIR` 指向**新**目录（如 `multi_system_a1_only`）；合并脚本输出 **新** `multi_system_summary_*.csv`，**禁止**默认覆盖现有 `results/multi_system/multi_system_summary.csv`。
+
+**输出与版本纪律（硬性：用户要求）**
+
+- 本变更**实施后任何重跑**，产物须写入**新位置**（新子目录和/或带版本/日期后缀的文件名），**不得覆盖**当前仓库中已有结果，包括但不限于：
+  - `results/multi_system/multi_system_summary.csv`、`run_timing.txt`、`status_*.png`、`batch_*.npz`、`_chunks/`、`_chunks_tierb/`；
+  - `results/batch_noiseless_f_theta_status.png`、`results/batch_noiseless_recovery.npz`。
+- **建议约定**（Executor 实现时二选一或组合，并在 Session Log 写明实际路径）：
+  - 子目录：`results/multi_system_a1_only/`（chunk 则 `_chunks/` 在其下）；单星批量：`results/batch_noiseless_a1_only/`；或
+  - 统一后缀：`*_a1only_20260416`（日期以运行当日为准）。
+- 若需对比旧结果，只读旧路径；新汇总与新导出 CSV（如 `data/nasa_archive/multi_system_summary_n_clean_nonzero.csv` 的续表）**另存新文件**，不得覆盖旧表，除非用户显式要求。
+
+### Agent 2 委派：时间采样——**60 s cadence**、按系统计算的 **Ingress/Egress（I/E）**，及**长凌星点数控制**（用户定案，待实现）
+
+**物理与工作假设**
+
+- **先假定**平台（全食）段的扁率与非扁率在流量差分上对当前 \(\chi^2\) **可忽略**；则 \(\chi^2\) **仅须在 I/E 上累加**，与全时标等价（在用户假设下）。
+- **`OblateSystem`/`lightcurve` 仅在 I/E 对应的时间向量上调用**：不再对整个「含平坦底」跨度生成致密 `times`，以减轻计算。
+
+**I/E 起止时间与「由参数计算」**
+
+- 每个系统的 ingress / egress **时间边界**必须由**该系统**可用的几何/轨道量算得（如在圆轨、小黑点近似或与小圆模型一致前提下，由 \(a/R_\star\)、\(R_p/R_\star\)、轨道倾角、（若用）偏心率、`t_0`、`P` 等推出**内侧/外侧接触对应的轨道相位**，再换回时间；或对 `squishyplanet` 使用的同一几何定义）。
+- NASA 快照中若在 `tran_flag`/keyparams 内存在 **`pl_trandur`、`pl_ratdor`、`pl_imppar` 或接触相关列**，应明确：**档案 `pl_trandur`** 常为 FWHM 或等价全宽表述，是否与「一/四接触」定义的 I/E **一致**必须由 Executor **对照实现与文档**选一个**自洽约定**（Planner 不写死公式）。
+- **端点外延（必须）**：在算得的 I/E 段首、末时间点外，各自再外延「适当」时间点，避免触点恰落在离散网格空隙上导致少采样；外延量建议可配置：**至少数个标称 \(\Delta t\)**（见下），或按 ingress 持续时间的小比例外延，写入代码注释并在 Session Log 写一句默认。
+
+**时间与采样（JWST 参考）**
+
+- **相邻样本间距标称**：**60 s**（参考 JWST 曝光量级；实现为常量，若以日传入 `squishyplanet` 则用 \(60/(86400)\,\mathrm{d}\)）。
+- **`times`** 仅由 **Ingress 时间段 ∪ Egress 时间段**（含上述外延端点）经均匀或受控抽样得到；**不得在平台段打点**调用光变生成。
+
+**长凌星与点数上限（必须，避免点数爆炸）**
+
+- 仅用 60 s 跨很长 I+E 仍会极多点；必须引入**确定性、可复现**的策略控制总点数 \(N\) 或等价上限，任选或组合，并在 `PLANET_CONFIG` / 专用 config 字典中可调，默认值在 Session Log 说明：
+  - **段内点数上限**：对 ingress、egress **各**设 `n_ie_max`，超出则对已生成的均匀序列进行**确定性子采样**（如每隔 \(k\) 点取一点，或对弧长按索引重采样）；
+  - **或**：有效间隔设为 \(\Delta t = \max(60\,\mathrm{s},\,\Delta t_\mathrm{adapt})\)，其中 \(\Delta t_\mathrm{adapt}\) 与 ingress+egress 总持续时间挂钩；
+  - **或**：总 `times.size` **硬顶**再在 I/E 间按比例分配点数。
+- 目标：在长凌星系外行星上仍可在合理墙钟内跑完网格；具体数值由 Executor **回填报表**黑板一行（不写大表）。
+
+**\(\chi^2\) 与实现对齐**
+
+- 若全流程仅构造 I/E 的 `times`，则 \(\chi^2=\sum_k (\cdots)^2\) **只在那些时刻**——与「mask 全时标」在假设下一致而无需在全时标后再 mask。
+
+**不改旧结果的纪律**
+
+- 本特性落地后的管道输出须落在 **新目录/新版本名**（与现有 `*_a1_only`、`multi_system*` 并行），**不得覆盖**已实现跑出的旧路径；Session Log **注明目录名**。
+
+**实现位置（指路）**
+
+- `src/oblateness/noiseless_grid_chi2_inversion.py`、`src/oblateness/batch_noiseless_recovery.py`（`_build_system` 与时间轴）；`tests/test_nasa_first_row_oblate_lightcurve.py` 若复用同一时间构造则同步；必要时抽 **小模块**（如 `transit_windows.py` 或等价）计算 I/E。
+
 ## [Task Board]
 
+- [x] Executor: **JWST cadence（60 s）+ 按系统参数的 I/E 时间窗**：仅在该窗内生成光变与 \(\chi^2\)，端点外延可配；长凌星 `times` 有段内上限子抽样；新图/npz：`results/noiseless_ie60/`、`results/batch_noiseless_a1_only_ie60/`（见 `transit_ie_sampling.py`；`OBLATE_TIME_SAMPLING_MODE=uniform_symmetric` 回退均匀窗）
+- [x] Executor: **无噪声恢复两态化（仅 A1）**：去掉 C1 对 `status` 的影响；汇总与图例仅 success/failed；C1 相关量保留诊断；单星批量图/npz 写入 `results/batch_noiseless_a1_only_ie60/`（与 I/E 采样同目录；勿覆盖旧的 `results/multi_system/*`）；多系统默认 `results/multi_system_a1_only/`、合并 `multi_system_summary_a1only.csv` / `run_timing_a1only.txt`（见专节）
 - [ ] Planner: 细化椭率探测的数学模型 (Pending)
+- [x] Executor: **Tier B 派生 + 合并表**：`python -m oblateness.build_tier_b_oblate_inputs` → `data/nasa_archive/ps_tran_oblate_inputs_tier_b_derived_20260416.csv`（164 行 B）、`ps_tran_oblate_inputs_combined_tierab_20260416.csv`（578+164=742）；原 `ps_tran_oblate_inputs_valid_20260416.csv` 未改；`injection_batch_578_completed` 与 `multi_system_summary.csv` join（见 Session Log 2026-04-21）
+- [x] Executor: **578 系统 ≈20 组并行 Slurm** + 分 chunk 独占目录 + **单次合并** → `results/multi_system/multi_system_summary.csv` 与 `results/multi_system/run_timing.txt`（`submit_multi_system_chunks.sh` → `test_chunk.sh` → `merge_multi_system_slurm.sh` → `merge_multi_system_chunks`；见 Session Log 2026-04-20）
 - [x] Executor: **多系统**无噪声批量：`python -m oblateness.multi_system_batch_noiseless`（`--rows` 或 `MULTI_SYSTEM_CONFIG`）；每系统输出 `results/multi_system/`；超算 `sbatch test.sh`（见 Session Log 2026-04-18）
 - [x] Executor: **修复 C1**：粗+细 \(\chi^2\) 合并后对 \((f,\theta)\) **去重**再取 \(\chi^2_{(2)}-\chi^2_{(1)}\)（见「C1 实现勘误」；`C1_DEDUP_CONFIG`）；重跑批量并更新 `results/` 产物
 - [x] Executor: 批量无噪声注入网格（\(f\) 0.01–0.15 步 0.01；\(\theta\) 0°–160° 步 20°）+ 粗网格 \(\arg\min\) + **局部细化** + **A1/C1** 判据 + **`f`–\(\theta\) 状态图**（见上节「批量无噪声反演」；实现 `src/oblateness/batch_noiseless_recovery.py`，可调参数见文件顶部各 `*_CONFIG`）
@@ -147,3 +328,14 @@
 - 2026-04-18 (Planner): C1 去重并全量重跑后，单星批量在 **\(f_\mathrm{inj}>0.06\)** 上可**全部干净恢复**；**小 \(f\)** 仍可能因信号弱失败（物理/分辨率，非条纹假象）。**下一步**同意开展 **多系统**无噪声批量（不同 `row_index`/宿主）；分层小样与交付物见黑板「多系统批量无噪声测试」；委派 **Agent 2**。
 - 2026-04-18 (Executor): 多系统入口 `src/oblateness/multi_system_batch_noiseless.py`：对 `--rows`（或默认 `MULTI_SYSTEM_CONFIG['row_indices']`）逐行调用 `run_batch(planet_config_for_row(i))`；每系统 `results/multi_system/status_row*_*.png`、`batch_row*_*.npz`，汇总 `results/multi_system/multi_system_summary.csv`；失败行 stderr 打印并记入 CSV `error`。超算：仓库根 `test.sh`（`#SBATCH`、`WORKDIR=/dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness`、顶部 `ROWS=...`），`sbatch test.sh`。
 - 2026-04-18 (Executor): `test.sh` 已与集群常用模板对齐（`partition=64c512g`、`account=acct-tdlffb`、`cpus-per-task=4`、`logs/%j.out`、`source activate astro_ml`）。**可改结果目录**：`RESULTS_SUBDIR`（相对 `results/`）或 `RESULTS_DIR`（绝对路径，透传 `--output-dir` / `OBLATE_MULTI_OUTPUT_DIR`）。代码：`multi_system_batch_noiseless.run_multi_system(..., output_dir=...)` 支持仓库外写入；CSV 中路径在仓库外时为绝对路径字符串。
+- 2026-04-18 (Executor): `multi_system_summary.csv` 默认**追加**本次运行行（不覆盖历史）；`--summary-overwrite` 整表重写。无外网 HPC：在联网机运行 `python -m oblateness.prefetch_exotic_ld_data --rows ...` 将 ExoTiC-LD 所需文件拉取到 `data/exotic_ld_data/`（与 `exotic_ld` 的 `mps1/.../mps1_spectra.dat`、`Sensitivity_files/..._throughput.csv` 结构一致），再上传至服务器。
+- 2026-04-20 (Executor): `prefetch_exotic_ld_data` 增加 `--all-csv`（对 `ps_tran_oblate_inputs_valid_*.csv` 全部 578 行逐星预取；已存在文件跳过）；下载带网络退避重试。全表预取：`PYTHONUNBUFFERED=1 python -m oblateness.prefetch_exotic_ld_data --all-csv 2>&1 | tee logs/prefetch_exotic_ld_all.log`。
+- 2026-04-20 (Chronicler): 用户要求 **578 系统分约 20 组并行 `sbatch`**，最终汇总至同一 `results/multi_system/multi_system_summary.csv` 与 `run_timing.txt`。黑板新增专节「多系统 Slurm 并行与汇总」：分 chunk 独占目录、**单次合并**（禁止并发写同一 CSV）；Task Board 新增对应 **Executor** 项。实现委派 **Agent 2**。
+- 2026-04-20 (Executor): 实现并行与合并：**分块** `src/oblateness/multi_system_chunks.py`（`partition_indices`、默认 578 行 / 20 组、前 18 组 29 行、后 2 组 28 行；`python -m oblateness.multi_system_chunks --list`）；**单 chunk 作业** `test_chunk.sh`（`CHUNK_ID`+`ROWS` → `results/multi_system/_chunks/chunk_XX/`、`--summary-overwrite`、`OBLATE_CHUNK_ID`）；**合并** `merge_multi_system_chunks.py`（无 `chunk_*` 时拒绝覆盖最终 CSV；`merge_multi_system_slurm.sh`）；**提交** `submit_multi_system_chunks.sh`（`sbatch`×20 + `afterok` 链式 `merge`）。`multi_system_batch_noiseless` 的 `run_timing.txt` 增加 `row_index_min/max`、`chunk_id`（若设 `OBLATE_CHUNK_ID`）。
+- 2026-04-21 (Planner): 黑板新增 **Tier B（派生 \(a/R_\star\) 等）** 与 **合并输入表** 规格：`oblateness_input_tier`（`A_archive_direct` / `B_derived_geometry`）、`pl_ratdor_source` / `pl_ratror_source`、`keyparams_row_index`、`tier_a_legacy_row_index`、`injection_batch_578_completed`；多系统补跑**默认仅提交 B 且未完成 578 注入**，避免重复。委派 **Agent 2** 实现筛选脚本与 CSV；**Agent 1 不改 `src/`**。
+- 2026-04-21 (Executor): **Tier B + 合并表** 落地：`src/oblateness/build_tier_b_oblate_inputs.py`。`tran_flag=1`∧`default_flag=1`（`ps_tran_flag_default_20260416` join）、非 Tier A 578、七列核心+`pl_orbsmax`/`st_rad` 派生 `pl_ratdor`（`sc.au`/`R_sun`）、`pl_ratror` 取档案或 `pl_rade`（default）×`R_⊕`/(`st_rad`×`R_sun`），`R_⊕=6.3781e6` m。输出：**仅 B** `ps_tran_oblate_inputs_tier_b_derived_20260416.csv`（164）；**A+B** `ps_tran_oblate_inputs_combined_tierab_20260416.csv`（742）；**未修改** `ps_tran_oblate_inputs_valid_20260416.csv`。验收：TOI-2537 b 在 B 且 `pl_ratdor_source=derived_orbsmax_st_rad`。
+- 2026-04-21 (Chronicler): 在 **[Project State]** 增补 **「上下文续接要点」**（会话压缩 / 新 Chat 恢复）：黑板文件名、`Tier A/B/合并` 路径与行数、`OBLATE_CSV_PATH` 默认与 578 重跑、C1 去重、Slurm chunk/merge、`n_clean≠0` 导出路径、Tier B 补跑与 LD 预取、Planner 待办指针。
+- 2026-04-22 (Planner/User): **无噪声批量判据变更**写入黑板专节「Agent 2 委派：无噪声恢复两态化（仅 A1）」：**成功/失败**仅由 **A1** 决定；**C1 不参与**分类，相关量可保留为诊断。实现后重跑须落在**新路径**，**禁止覆盖**现有 `results/` 已提交产物；Task Board 已增对应 Executor 项。
+- 2026-04-22 (Executor): **两态化（仅 A1）+ 新结果路径**：`batch_noiseless_recovery` 的 ``status`` 仅为 ``success``/``failed``（A1）；C1 仍写入每条结果/npz 作诊断；后接 I/E 采样时图/npz 目录为 ``batch_noiseless_a1_only_ie60/``。``multi_system_batch_noiseless`` 默认 ``results/multi_system_a1_only/``，汇总列 ``n_success``/``n_failed``。``merge_multi_system_chunks`` 默认读 ``multi_system_a1_only/_chunks_tierb``，写 ``multi_system_summary_a1only.csv``、``run_timing_a1only.txt``；chunk 内旧三列汇总读入时规范化为 ``n_success=n_clean+n_degenerate``。``test_chunk.sh``/``submit``/``test.sh`` 默认指新目录；``build_tier_b_oblate_inputs`` join 兼容新/旧列。测试：``tests/test_multi_system_chunks.py``。
+- 2026-04-22 (Executor): **60 s cadence + I/E 窗**（Planner 专节）：新增 ``src/oblateness/transit_ie_sampling.py``（圆轨接触时刻、b=(a/R_*)cos i、v_sky；ingress/egress 并网、外延 ``edge_pad_cadences``、段内 ``n_ie_segment_max`` 确定性子采样；e 大或几何无效回退均匀窗）。``batch_noiseless_recovery._build_system`` 与 ``noiseless_grid_chi2_inversion.run_grid_inversion`` 经 ``build_lightcurve_time_array_days`` 接 ``PLANET_CONFIG['time_sampling']``；``noiseless`` 图/npz 默认 ``results/noiseless_ie60/``；``OBLATE_TIME_SAMPLING_MODE=uniform_symmetric`` 回退旧对称窗。测试 ``tests/test_transit_ie_sampling.py``; ``test_nasa_first_row_oblate_lightcurve`` 同步。
+- 2026-04-22 (Planner/User): 委派 **Executor**：在无噪声 \(\chi^2\) 假定**平台段可不计**前提下，仅在 **ingress/egress** 采样并生成光变；I/E **边界由各系统轨道/几何参数算出**（与档案列定义自洽），段末适当外延打点；间隔标称 **60 s**（JWST 参考）；**长凌星系须有点数上限或可变相隔**以免爆炸（见黑板专节）。

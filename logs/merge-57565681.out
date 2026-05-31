@@ -1,0 +1,5 @@
+=== merge_multi_system_chunks START 2026-04-22T21:35:27+08:00 ===
+SLURM_JOB_ID=57565681
+row_index: Tier B chunk-local -> global (+578; root=_chunks_tierb)
+appended 164 data rows -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/multi_system_summary.csv (append=True)
+merged timing -> /dssg/home/acct-tdlffb/tdlffb-user1/workspace/RV_astrometry_detect/shen/oblateness/results/multi_system/run_timing.txt (append=True)

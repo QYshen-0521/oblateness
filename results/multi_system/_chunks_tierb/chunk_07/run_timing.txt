@@ -1,0 +1,6 @@
+wall_seconds=34579.708472
+n_row_indices=16
+row_index_min=116
+row_index_max=131
+chunk_id=07
+slurm_job_id=57565677

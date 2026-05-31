@@ -1,0 +1,165 @@
+# merge_multi_system_chunks — combined chunk timings + merge metadata
+merge_utc=2026-05-13T21:58:30.244013+00:00
+merge_wall_seconds=0.957267
+n_summary_rows_expected=742
+
+### chunk_00
+wall_seconds=44760.548070
+n_row_indices=38
+row_index_min=0
+row_index_max=37
+chunk_id=00
+slurm_job_id=57951994
+
+### chunk_01
+wall_seconds=41890.289021
+n_row_indices=38
+row_index_min=38
+row_index_max=75
+chunk_id=01
+slurm_job_id=57951995
+
+### chunk_02
+wall_seconds=51267.482681
+n_row_indices=37
+row_index_min=76
+row_index_max=112
+chunk_id=02
+slurm_job_id=57951996
+
+### chunk_03
+wall_seconds=48641.949358
+n_row_indices=37
+row_index_min=113
+row_index_max=149
+chunk_id=03
+slurm_job_id=57951997
+
+### chunk_04
+wall_seconds=58089.769980
+n_row_indices=37
+row_index_min=150
+row_index_max=186
+chunk_id=04
+slurm_job_id=57951998
+
+### chunk_05
+wall_seconds=45498.236819
+n_row_indices=37
+row_index_min=187
+row_index_max=223
+chunk_id=05
+slurm_job_id=57951999
+
+### chunk_06
+wall_seconds=40364.601083
+n_row_indices=37
+row_index_min=224
+row_index_max=260
+chunk_id=06
+slurm_job_id=57952000
+
+### chunk_07
+wall_seconds=69478.929442
+n_row_indices=37
+row_index_min=261
+row_index_max=297
+chunk_id=07
+slurm_job_id=57952001
+
+### chunk_08
+wall_seconds=45273.783406
+n_row_indices=37
+row_index_min=298
+row_index_max=334
+chunk_id=08
+slurm_job_id=57952002
+
+### chunk_09
+wall_seconds=49778.483300
+n_row_indices=37
+row_index_min=335
+row_index_max=371
+chunk_id=09
+slurm_job_id=57952003
+
+### chunk_10
+wall_seconds=39531.065233
+n_row_indices=37
+row_index_min=372
+row_index_max=408
+chunk_id=10
+slurm_job_id=57952004
+
+### chunk_11
+wall_seconds=44971.707905
+n_row_indices=37
+row_index_min=409
+row_index_max=445
+chunk_id=11
+slurm_job_id=57952005
+
+### chunk_12
+wall_seconds=44746.917994
+n_row_indices=37
+row_index_min=446
+row_index_max=482
+chunk_id=12
+slurm_job_id=57952006
+
+### chunk_13
+wall_seconds=50479.533299
+n_row_indices=37
+row_index_min=483
+row_index_max=519
+chunk_id=13
+slurm_job_id=57952007
+
+### chunk_14
+wall_seconds=50903.839040
+n_row_indices=37
+row_index_min=520
+row_index_max=556
+chunk_id=14
+slurm_job_id=57952008
+
+### chunk_15
+wall_seconds=44104.299748
+n_row_indices=37
+row_index_min=557
+row_index_max=593
+chunk_id=15
+slurm_job_id=57952009
+
+### chunk_16
+wall_seconds=46922.094052
+n_row_indices=37
+row_index_min=594
+row_index_max=630
+chunk_id=16
+slurm_job_id=57952010
+
+### chunk_17
+wall_seconds=42104.775754
+n_row_indices=37
+row_index_min=631
+row_index_max=667
+chunk_id=17
+slurm_job_id=57952011
+
+### chunk_18
+wall_seconds=53100.996744
+n_row_indices=37
+row_index_min=668
+row_index_max=704
+chunk_id=18
+slurm_job_id=57952012
+
+### chunk_19
+wall_seconds=60698.115636
+n_row_indices=37
+row_index_min=705
+row_index_max=741
+chunk_id=19
+slurm_job_id=57952013
+

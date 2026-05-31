@@ -1,0 +1,23 @@
+[94/578] row 93 TOI-1801 b: Teff=3863 logg=4.78 [M/H]=-0.19 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.2/teff3900/logg4.7/mps1_spectra.dat, msg=Cannot connect to URL.
+[182/578] row 181 TOI-1260 d: Teff=4227 logg=4.57 [M/H]=-0.1 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.1/teff4200/logg4.6/mps1_spectra.dat, msg=Cannot connect to URL.
+[232/578] row 231 Kepler-79 e: Teff=6174 logg=4.274 [M/H]=-0.0731 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.05/teff6200/logg4.3/mps1_spectra.dat, msg=Cannot connect to URL.
+[251/578] row 250 Kepler-1985 b: Teff=5370 logg=4.411 [M/H]=0.14 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.15/teff5400/logg4.4/mps1_spectra.dat, msg=Cannot connect to URL.
+[317/578] row 316 TOI-3261 b: Teff=5068 logg=4.19 [M/H]=0.138 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.15/teff5100/logg4.2/mps1_spectra.dat, msg=Cannot connect to URL.
+[448/578] row 447 K2-140 b: Teff=5585 logg=4.4 [M/H]=0.1 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.1/teff5600/logg4.4/mps1_spectra.dat, msg=Cannot connect to URL.
+[467/578] row 466 HATS-43 b: Teff=5099 logg=4.539 [M/H]=0.05 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH0.05/teff5100/logg4.5/mps1_spectra.dat, msg=Cannot connect to URL.
+[567/578] row 566 Kepler-1801 c: Teff=5738 logg=4.426 [M/H]=-0.06 -> FAILED: Connection error occurred: url=https://www.star.bris.ac.uk/exotic-ld-data/mps1/MH-0.05/teff5700/logg4.4/mps1_spectra.dat, msg=Cannot connect to URL.
+--all-csv: /Users/qyshen/projects/exoplanet/oblateness/data/nasa_archive/ps_tran_oblate_inputs_valid_20260416.csv -> 578 rows (indices 0..577)
+ld_data_path (root-relative): /Users/qyshen/projects/exoplanet/oblateness/data/exotic_ld_data
+row_indices (578): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]...
+[1/578] row 0 TOI-2384 b: Teff=3943 logg=4.66 [M/H]=0.332 -> ok
+[51/578] row 50 TOI-1203 b: Teff=5737 logg=4.34 [M/H]=-0.39 -> ok
+[101/578] row 100 TOI-6054.01: Teff=6047 logg=4.1 [M/H]=-0.07 -> ok
+[151/578] row 150 TOI-521 b: Teff=3544 logg=4.97 [M/H]=-0.12 -> ok
+[201/578] row 200 TOI-1634 b: Teff=3550 logg=4.833 [M/H]=0.23 -> ok
+[301/578] row 300 K2-138 c: Teff=5356 logg=4.54 [M/H]=0.14 -> ok
+[351/578] row 350 TOI-2095 b: Teff=3759 logg=5.11 [M/H]=-0.24 -> ok
+[401/578] row 400 TOI-778 b: Teff=6643 logg=4.05 [M/H]=0.0 -> ok
+[451/578] row 450 HAT-P-27 b: Teff=5316 logg=4.52626 [M/H]=0.3 -> ok
+[501/578] row 500 HD 137496 b: Teff=5799 logg=4.05 [M/H]=-0.03 -> ok
+[551/578] row 550 EPIC 249893012 d: Teff=5430 logg=3.99 [M/H]=0.2 -> ok
+[578/578] row 577 Kepler-9 c: Teff=5774 logg=4.49 [M/H]=0.05 -> ok
